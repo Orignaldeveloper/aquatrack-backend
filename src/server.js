@@ -16,7 +16,7 @@ app.use(cors({
   origin: [
     'http://localhost:5173',
     'http://localhost:5174',
-    'https://aquatrack-frontend.vercel.app'
+    'https://theaquatrack.vercel.app/'
   ],
   credentials: true
 }))
