@@ -4,7 +4,7 @@ import Tenant from '../models/Tenant.js'
 
 // Generate JWT token
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRE })
+  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' })
 }
 
 // @POST /api/auth/register-tenant  (superadmin creates new tenant + admin user)
