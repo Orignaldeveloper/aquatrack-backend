@@ -52,12 +52,13 @@ export const createDelivery = async (req, res) => {
   })
 
   // Update customer cansOut and balance
-  await Customer.findByIdAndUpdate(customerId, {
-    $inc: {
-      cansOut: netCans,
-      balance: revenue
-    }
-  })
+ await Customer.findByIdAndUpdate(customerId, {
+  $inc: {
+    cansOut: netDelivered,
+    balance: revenueAdded,
+    cansReturned: +returned || 0
+  }
+})
 
   // Populate customer info before sending response
   await delivery.populate('customerId', 'name mobile area rate')

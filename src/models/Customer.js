@@ -10,6 +10,7 @@ const customerSchema = new mongoose.Schema({
   deposit: { type: Number, default: 500 },
   balance: { type: Number, default: 0 },
   cansOut: { type: Number, default: 0 },
+  cansReturned: { type: Number, default: 0 },
   active: { type: Boolean, default: true },
 }, { timestamps: true })
 
