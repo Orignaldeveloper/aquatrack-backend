@@ -73,22 +73,88 @@ export const login = async (req, res) => {
 
 // @POST /api/auth/add-user  (admin adds delivery person)
 export const addUser = async (req, res) => {
-  const { name, email, password, role } = req.body
+  try {
+    const { name, email, password, role, mobile, area } = req.body
 
-  const user = await User.create({
-    name, email, password,
-    role: role || 'delivery',
-    tenantId: req.user.tenantId
-  })
+    if (!name || !email || !password)
+      return res.status(400).json({ success: false, message: 'Name, email and password are required' })
 
-  res.status(201).json({
-    success: true,
-    user: { id: user._id, name: user.name, email: user.email, role: user.role }
-  })
+    const existing = await User.findOne({ email })
+    if (existing)
+      return res.status(400).json({ success: false, message: 'Email already exists' })
+
+    const user = await User.create({
+      name, email, password,
+      role: role || 'delivery',
+      tenantId: req.user.tenantId,
+      mobile: mobile || '',
+      area: area || ''
+    })
+
+    res.status(201).json({
+      success: true,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        mobile: user.mobile,
+        area: user.area,
+        active: user.active
+      }
+    })
+  } catch (err) {
+    console.error('addUser error:', err.message)
+    res.status(500).json({ success: false, message: err.message })
+  }
 }
-
 // @GET /api/auth/me
 export const getMe = async (req, res) => {
   const user = await User.findById(req.user.id).populate('tenantId').select('-password')
   res.json({ success: true, user })
+}
+// GET /api/auth/delivery-persons
+export const getDeliveryPersons = async (req, res) => {
+  try {
+    const persons = await User.find({
+      tenantId: req.user.tenantId,
+      role: 'delivery'
+    }).select('-password')
+    res.json({ success: true, count: persons.length, persons })
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message })
+  }
+}
+
+// PUT /api/auth/delivery-persons/:id
+export const updateDeliveryPerson = async (req, res) => {
+  try {
+    const { name, mobile, area, active } = req.body
+    const person = await User.findOneAndUpdate(
+      { _id: req.params.id, tenantId: req.user.tenantId, role: 'delivery' },
+      { name, mobile, area, active },
+      { new: true }
+    ).select('-password')
+    if (!person)
+      return res.status(404).json({ success: false, message: 'Person not found' })
+    res.json({ success: true, person })
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message })
+  }
+}
+
+// DELETE /api/auth/delivery-persons/:id
+export const deleteDeliveryPerson = async (req, res) => {
+  try {
+    const person = await User.findOneAndDelete({
+      _id: req.params.id,
+      tenantId: req.user.tenantId,
+      role: 'delivery'
+    })
+    if (!person)
+      return res.status(404).json({ success: false, message: 'Person not found' })
+    res.json({ success: true, message: 'Delivery person deleted' })
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message })
+  }
 }

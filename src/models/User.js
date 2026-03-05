@@ -8,7 +8,9 @@ const userSchema = new mongoose.Schema({
   role: { type: String, enum: ['superadmin', 'admin', 'delivery'], default: 'admin' },
   tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', default: null },
   active: { type: Boolean, default: true },
-}, { timestamps: true })
+  mobile: { type: String, default: '' },
+  area: { type: String, default: '' },
+  }, { timestamps: true })
 
 // Hash password before saving
 userSchema.pre('save', async function() {

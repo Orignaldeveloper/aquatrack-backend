@@ -6,6 +6,11 @@ export const getDeliveries = async (req, res) => {
   const { date, dateRange, customerId } = req.query
   const filter = { tenantId: req.user.tenantId }
 
+// Delivery person sees only their own deliveries
+if (req.user.role === 'delivery') {
+  filter.deliveryPersonName = req.user.name
+}
+
   if (date) {
     const start = new Date(date)
     start.setHours(0, 0, 0, 0)
@@ -39,10 +44,16 @@ export const getTodaySummary = async (req, res) => {
   const end = new Date()
   end.setHours(23, 59, 59, 999)
 
-  const deliveries = await Delivery.find({
-    tenantId: req.user.tenantId,
-    date: { $gte: today, $lte: end }
-  })
+  const summaryFilter = {
+  tenantId: req.user.tenantId,
+  date: { $gte: today, $lte: end }
+}
+
+if (req.user.role === 'delivery') {
+  summaryFilter.deliveryPersonName = req.user.name
+}
+
+const deliveries = await Delivery.find(summaryFilter)
 
   const totalDelivered = deliveries.reduce((s, d) => s + d.delivered, 0)
   const totalReturned = deliveries.reduce((s, d) => s + d.returned, 0)
