@@ -6,7 +6,7 @@ const invoiceSchema = new mongoose.Schema({
   customerName: { type: String },
   customerMobile: { type: String },
   customerAddress: { type: String },
-  invoiceNo: { type: String, unique: true },
+  invoiceNo: { type: String },
   month: { type: Number, required: true },
   year: { type: Number, required: true },
   totalCansDelivered: { type: Number, default: 0 },

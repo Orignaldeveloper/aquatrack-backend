@@ -158,3 +158,43 @@ export const deleteDeliveryPerson = async (req, res) => {
     res.status(500).json({ success: false, message: err.message })
   }
 }
+// GET /api/auth/tenants
+export const getTenants = async (req, res) => {
+  try {
+    const tenants = await Tenant.find().sort({ createdAt: -1 })
+    
+    // Get stats for each tenant
+    const tenantsWithStats = await Promise.all(tenants.map(async (t) => {
+      const Customer = (await import('../models/Customer.js')).default
+      const customerCount = await Customer.countDocuments({ tenantId: t._id })
+      const adminUser = await User.findOne({ tenantId: t._id, role: 'admin' }).select('-password')
+      return {
+        ...t.toObject(),
+        customerCount,
+        adminEmail: adminUser?.email || '',
+        adminName: adminUser?.name || ''
+      }
+    }))
+
+    res.json({ success: true, count: tenants.length, tenants: tenantsWithStats })
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message })
+  }
+}
+
+// PUT /api/auth/tenants/:id/toggle
+export const toggleTenant = async (req, res) => {
+  try {
+    const { active } = req.body
+    const tenant = await Tenant.findByIdAndUpdate(
+      req.params.id,
+      { active },
+      { new: true }
+    )
+    if (!tenant)
+      return res.status(404).json({ success: false, message: 'Tenant not found' })
+    res.json({ success: true, tenant })
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message })
+  }
+}

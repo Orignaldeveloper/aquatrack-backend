@@ -3,9 +3,10 @@ import Delivery from '../models/Delivery.js'
 import Customer from '../models/Customer.js'
 
 // ─── GENERATE INVOICE NUMBER ──────────────────────────────────────────────────
-const generateInvoiceNo = (month, year, index) => {
+const generateInvoiceNo = async (tenantId, month, year) => {
+  const count = await Invoice.countDocuments({ tenantId, month: +month, year: +year })
   const m = String(month).padStart(2, '0')
-  const idx = String(index + 1).padStart(3, '0')
+  const idx = String(count + 1).padStart(3, '0')
   return `INV-${year}${m}-${idx}`
 }
 
@@ -72,7 +73,7 @@ export const generateMonthlyBilling = async (req, res) => {
         customerName: customer.name,
         customerMobile: customer.mobile,
         customerAddress: customer.address,
-        invoiceNo: generateInvoiceNo(month, year, i),
+        invoiceNo: await generateInvoiceNo(tenantId, month, year),
         month: +month,
         year: +year,
         totalCansDelivered,
