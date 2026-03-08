@@ -2,7 +2,7 @@ import express from 'express'
 import {
   login, registerTenant, addUser, getMe,
   getDeliveryPersons, updateDeliveryPerson, deleteDeliveryPerson,
-  getTenants, toggleTenant
+  getTenants, toggleTenant, updateTenant
 } from '../controllers/authController.js'
 import { protect, authorize } from '../middleware/auth.js'
 
@@ -17,5 +17,6 @@ router.put('/delivery-persons/:id', protect, authorize('admin', 'superadmin'), u
 router.delete('/delivery-persons/:id', protect, authorize('admin', 'superadmin'), deleteDeliveryPerson)
 router.get('/tenants', protect, authorize('superadmin'), getTenants)
 router.put('/tenants/:id/toggle', protect, authorize('superadmin'), toggleTenant)
+router.put('/tenants/:id', protect, authorize('superadmin'), updateTenant)
 
 export default router

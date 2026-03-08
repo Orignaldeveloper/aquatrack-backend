@@ -9,13 +9,14 @@ const generateToken = (id) => {
 
 // @POST /api/auth/register-tenant  (superadmin creates new tenant + admin user)
 export const registerTenant = async (req, res) => {
-  const { tenantName, tenantEmail, tenantPhone, adminName, adminEmail, adminPassword, plan } = req.body
+  const { tenantName, tenantEmail, tenantPhone, tenantAddress, adminName, adminEmail, adminPassword, plan } = req.body
 
   // Create tenant
   const tenant = await Tenant.create({
     name: tenantName,
     email: tenantEmail,
     phone: tenantPhone,
+    address: tenantAddress || '',
     plan: plan || 'basic'
   })
 
@@ -61,13 +62,16 @@ export const login = async (req, res) => {
     success: true,
     token,
     user: {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      tenantId: user.tenantId?._id || null,
-      tenantName: user.tenantId?.name || null,
-    }
+  id: user._id,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+  tenantId: user.tenantId?._id || null,
+  tenantName: user.tenantId?.name || null,
+  tenantPhone: user.tenantId?.phone || null,
+  tenantEmail: user.tenantId?.email || null,
+  tenantAddress: user.tenantId?.address || null,
+  }
   })
 }
 
@@ -189,6 +193,22 @@ export const toggleTenant = async (req, res) => {
     const tenant = await Tenant.findByIdAndUpdate(
       req.params.id,
       { active },
+      { new: true }
+    )
+    if (!tenant)
+      return res.status(404).json({ success: false, message: 'Tenant not found' })
+    res.json({ success: true, tenant })
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message })
+  }
+}
+// PUT /api/auth/tenants/:id
+export const updateTenant = async (req, res) => {
+  try {
+    const { name, email, phone, address, plan } = req.body
+    const tenant = await Tenant.findByIdAndUpdate(
+      req.params.id,
+      { name, email, phone, address, plan },
       { new: true }
     )
     if (!tenant)
