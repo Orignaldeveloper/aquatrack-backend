@@ -133,3 +133,61 @@ export const deleteDelivery = async (req, res) => {
   await delivery.deleteOne()
   res.json({ success: true, message: 'Delivery deleted' })
 }
+
+// PUT /api/deliveries/:id
+export const updateDelivery = async (req, res) => {
+  try {
+    const { delivered, returned, deliveryPersonName, date } = req.body
+
+    const delivery = await Delivery.findOne({
+      _id: req.params.id,
+      tenantId: req.user.tenantId
+    })
+
+    if (!delivery)
+      return res.status(404).json({ success: false, message: 'Delivery not found' })
+
+    const customer = await Customer.findById(delivery.customerId)
+    if (!customer)
+      return res.status(404).json({ success: false, message: 'Customer not found' })
+
+    // Reverse old values
+    await Customer.findByIdAndUpdate(delivery.customerId, {
+      $inc: {
+        cansOut: -delivery.netDelivered,
+        balance: -delivery.revenue,
+        cansReturned: -delivery.returned
+      }
+    })
+
+    // Calculate new values
+    const deliveredNum = +delivered || 0
+    const returnedNum = +returned || 0
+    const netDelivered = deliveredNum - returnedNum
+    const revenue = deliveredNum * customer.rate
+
+    // Update delivery
+    delivery.delivered = deliveredNum
+    delivery.returned = returnedNum
+    delivery.netDelivered = netDelivered
+    delivery.revenue = revenue
+    delivery.deliveryPersonName = deliveryPersonName || delivery.deliveryPersonName
+    delivery.date = date ? new Date(date) : delivery.date
+    await delivery.save()
+
+    // Apply new values to customer
+    await Customer.findByIdAndUpdate(delivery.customerId, {
+      $inc: {
+        cansOut: netDelivered,
+        balance: revenue,
+        cansReturned: returnedNum
+      }
+    })
+
+    await delivery.populate('customerId', 'name mobile area rate')
+    res.json({ success: true, delivery })
+  } catch (err) {
+    console.error('updateDelivery error:', err.message)
+    res.status(500).json({ success: false, message: err.message })
+  }
+}
