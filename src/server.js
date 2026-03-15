@@ -13,13 +13,7 @@ dotenv.config()
 const app = express()
 
 app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:5174',
-    'https://theaquatrack-o73kur8e0-satyams-projects-0137c4e8.vercel.app',
-    'https://aquatrack.vercel.app',       // add if you renamed
-    'https://theaquatracks.vercel.app',    // add if you renamed
-  ],
+  origin: true,
   credentials: true
 }))
 app.use(express.json())
