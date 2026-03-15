@@ -14,7 +14,10 @@ const app = express()
 
 app.use(cors({
   origin: process.env.NODE_ENV === 'production'
-    ? ['https://theaquatrack-o73kur8e0-satyams-projects-0137c4e8.vercel.app']
+    ? [
+        'https://theaquatrack-o73kur8e0-satyams-projects-0137c4e8.vercel.app',
+        'https://theaquatracks.vercel.app'
+      ]
     : true,
   credentials: true
 }))
