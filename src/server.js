@@ -13,7 +13,9 @@ dotenv.config()
 const app = express()
 
 app.use(cors({
-  origin: true,
+  origin: process.env.NODE_ENV === 'production'
+    ? ['https://theaquatrack-o73kur8e0-satyams-projects-0137c4e8.vercel.app']
+    : true,
   credentials: true
 }))
 app.use(express.json())
