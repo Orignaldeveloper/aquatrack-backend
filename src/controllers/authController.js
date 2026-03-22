@@ -218,3 +218,77 @@ export const updateTenant = async (req, res) => {
     res.status(500).json({ success: false, message: err.message })
   }
 }
+
+// GET /api/auth/superadmins
+export const getSuperAdmins = async (req, res) => {
+  try {
+    const admins = await User.find({ role: 'superadmin' }).select('-password')
+    res.json({ success: true, admins })
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message })
+  }
+}
+
+// POST /api/auth/add-superadmin
+export const addSuperAdmin = async (req, res) => {
+  try {
+    const { name, email, password } = req.body
+    if (!name || !email || !password)
+      return res.status(400).json({ success: false, message: 'All fields required' })
+    const existing = await User.findOne({ email })
+    if (existing)
+      return res.status(400).json({ success: false, message: 'Email already exists' })
+    const user = await User.create({
+      name, email, password,
+      role: 'superadmin',
+      tenantId: null,
+      active: true
+    })
+    res.status(201).json({
+      success: true,
+      user: { _id: user._id, name: user.name, email: user.email, role: user.role, active: user.active }
+    })
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message })
+  }
+}
+
+// PUT /api/auth/superadmins/:id/toggle
+export const toggleSuperAdmin = async (req, res) => {
+  try {
+    // Cannot deactivate yourself
+    if (req.params.id === req.user.id.toString())
+      return res.status(400).json({ success: false, message: 'You cannot deactivate yourself' })
+
+    const { active } = req.body
+    const user = await User.findOneAndUpdate(
+      { _id: req.params.id, role: 'superadmin' },
+      { active },
+      { new: true }
+    ).select('-password')
+
+    if (!user)
+      return res.status(404).json({ success: false, message: 'Superadmin not found' })
+
+    res.json({ success: true, user })
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message })
+  }
+}
+
+// PUT /api/auth/tenant-users/:id/toggle
+export const toggleTenantUser = async (req, res) => {
+  try {
+    const { active } = req.body
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { active },
+      { new: true }
+    ).select('-password')
+    if (!user)
+      return res.status(404).json({ success: false, message: 'User not found' })
+    res.json({ success: true, user })
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message })
+  }
+}
